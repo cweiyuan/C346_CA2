@@ -7,32 +7,45 @@ export default function App() {
   const [habits, setHabits] = useState([]);
   const [newHabit, setNewHabit] = useState('');
 
-  const addHabit = () => {
-    if (newHabit.trim() === '') return;
+  const addHabit = async () => {
+  if (newHabit.trim() === '') return;
 
-    const newHabitObject = {
-      habit_id: Date.now(),              
-      title: newHabit,
-      description: 'User added habit',
-      category: 'General',
-      points_per_completion: 10,
-      is_active: 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+  try {
+    const response = await fetch(
+      'https://c346-ca2-server.onrender.com/addhabits',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newHabit,
+          description: 'User added habit',
+          category: 'General',
+          points_per_completion: 10,
+          is_active: 1,
+        }),
+      }
+    );
 
-    setHabits((prevHabits) => [...prevHabits, newHabitObject]);
+    const savedHabit = await response.json();
+    
+    setHabits((prevHabits) => [...prevHabits, savedHabit]);
     setNewHabit('');
-  };
+
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const renderItem = ({ item }) => {
     return (
-      <view>
+      <View>
         <Text>{item.title}</Text>
         <Text>{item.description}</Text>
         <Text>Category: {item.category}</Text>
         <Text>Points after completion: {item.points_per_completion}</Text>
-      </view>
+      </View>
     );
   };
 
