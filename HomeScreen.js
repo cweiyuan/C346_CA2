@@ -35,6 +35,16 @@ export default function App() {
 
    return (
     <View style={styles.container}>
+      <Button
+        title="Summary"
+        onPress={() => navigation.navigate('PointScreen')}
+      />
+
+      <Button
+        title="Habit"
+        onPress={() => navigation.navigate('CompleteHabitcreen')}
+      />
+
       <FlatList
         data={habits}
         keyExtractor={(item) => item.habit_id.toString()}
