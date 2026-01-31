@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 
+//
 const CompleteHabitScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
