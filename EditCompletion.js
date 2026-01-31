@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 const EditCompletion = () => {
@@ -11,54 +19,61 @@ const EditCompletion = () => {
 
   if (!habit) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>No habit data found</Text>
-      </View>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.form}>
+          <Text style={styles.errorText}>No habit data found</Text>
+        </View>
+      </ScrollView>
     );
   }
 
+  const updateCompletion = async () => {
+    const newCount = parseInt(completionCount) || 0;
+    try {
+      const response = await fetch(`https://c346-ca2-server.onrender.com/habit/${habit.habit_id}/completions`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_count: newCount })
+      });
+      if (response.ok) {
+        Alert.alert('Success', 'Completion count updated', [
+          { text: 'OK', onPress: () => navigation.navigate('Home') }
+        ]);
+      } else {
+        const data = await response.json();
+        Alert.alert('Error', data.message || 'Failed to update count');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Unable to connect to server');
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.headerTitle}>Edit Completion Count</Text>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Completion Count</Text>
-        <TextInput
-          style={styles.input}
-          value={completionCount}
-          onChangeText={setCompletionCount}
-          placeholder="Enter completion count"
-          keyboardType="numeric"
-        />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.form}>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Completion Count</Text>
+          <TextInput
+            style={styles.input}
+            value={completionCount}
+            onChangeText={setCompletionCount}
+            placeholder="Enter completion count"
+            keyboardType="numeric"
+          />
+        </View>
+
+        <TouchableOpacity style={styles.addBtn} onPress={updateCompletion}>
+          <Text style={styles.addBtnText}>Save Completion Count</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.cancelBtn} 
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.cancelBtnText}>Cancel</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.updateBtn}
-        onPress={async () => {
-          const newCount = parseInt(completionCount) || 0;
-          try {
-            const response = await fetch(`https://c346-ca2-server.onrender.com/habit/${habit.habit_id}/completions`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ new_count: newCount })
-            });
-            if (response.ok) {
-              Alert.alert('Success', 'Completion count updated', [
-                { text: 'OK', onPress: () => navigation.navigate('Home') }
-              ]);
-            } else {
-              const data = await response.json();
-              Alert.alert('Error', data.message || 'Failed to update count');
-            }
-          } catch (error) {
-            Alert.alert('Error', 'Unable to connect to server');
-          }
-        }}
-      >
-        <Text style={styles.updateBtnText}>Save Completion Count</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.deleteBtn} onPress={() => navigation.goBack()}>
-        <Text style={styles.deleteBtnText}>Cancel</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -66,19 +81,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafb',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#333',
-    marginBottom: 24,
+  content: {
+    paddingBottom: 30,
+  },
+  form: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   inputGroup: {
     marginBottom: 20,
-    width: '100%',
   },
   label: {
     fontSize: 14,
@@ -95,22 +107,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 14,
     color: '#333',
-    width: '100%',
   },
-  updateBtn: {
+  addBtn: {
     backgroundColor: '#4caf50',
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 10,
-    width: '100%',
   },
-  updateBtnText: {
+  addBtnText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
   },
-  deleteBtn: {
+  cancelBtn: {
     backgroundColor: '#fff',
     borderWidth: 2,
     borderColor: '#f44336',
@@ -118,9 +128,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 12,
-    width: '100%',
   },
-  deleteBtnText: {
+  cancelBtnText: {
     color: '#f44336',
     fontSize: 16,
     fontWeight: '700',
@@ -129,6 +138,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
     textAlign: 'center',
+    paddingVertical: 20,
   },
 });
 

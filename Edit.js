@@ -6,11 +6,14 @@ const Edit = () => {
 	const navigation = useNavigation();
 	const route = useRoute();
 	const habit = route.params?.habit;
+	const editCount = route.params?.editCount;
+	const initialCount = route.params?.currentCount ?? 0;
 
 	const [title, setTitle] = useState(habit?.title || '');
 	const [description, setDescription] = useState(habit?.description || '');
 	const [category, setCategory] = useState(habit?.category || '');
 	const [points, setPoints] = useState(habit?.points_per_completion?.toString() || '10');
+	const [completionCount, setCompletionCount] = useState(initialCount.toString());
 
 	const updateHabit = async () => {
 		if (!title.trim()) {
@@ -46,7 +49,7 @@ const Edit = () => {
 			
 			if (response.ok) {
 				Alert.alert('Success', 'Habit updated successfully', [
-					{ text: 'OK', onPress: () => navigation.navigate('Completed') }
+					{ text: 'OK', onPress: () => navigation.navigate('Home') }
 				]);
 			} else {
 				Alert.alert('Error', data.message || 'Failed to update habit');
@@ -58,37 +61,38 @@ const Edit = () => {
 	};
 
 	const deleteHabit = async () => {
-		Alert.alert(
-			'Delete Habit',
-			'Are you sure you want to delete this habit?',
-			[
-				{ text: 'Cancel', style: 'cancel' },
-				{
-					text: 'Delete',
-					style: 'destructive',
-					onPress: async () => {
-						try {
-							const response = await fetch(
-								`https://c346-ca2-server.onrender.com/deletehabits/${habit.habit_id}`,
-								{ method: 'DELETE' }
-							);
+  Alert.alert(
+    'Delete Habit',
+    'Are you sure you want to delete this habit?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const response = await fetch(
+              `https://c346-ca2-server.onrender.com/deletehabits/${habit.habit_id}`,
+              { method: 'DELETE' }
+            );
 
-							if (response.ok) {
-								Alert.alert('Success', 'Habit deleted successfully', [
-								{ text: 'OK', onPress: () => navigation.navigate('Completed') }
-								]);
-							} else {
-								Alert.alert('Error', 'Failed to delete habit');
-							}
-						} catch (error) {
-							console.error('Error deleting habit:', error);
-							Alert.alert('Error', 'Unable to connect to server');
-						}
-					}
-				}
-			]
-		);
-	};
+            if (response.ok) {
+              Alert.alert('Success', 'Habit deleted successfully', [
+                { text: 'OK', onPress: () => navigation.navigate('Home') }
+              ]);
+            } else {
+              Alert.alert('Error', 'Failed to delete habit');
+            }
+          } catch (error) {
+            console.error('Error deleting habit:', error);
+            Alert.alert('Error', 'Unable to connect to server');
+          }
+        }
+      }
+    ]
+  );
+};
+
 
 	if (!habit) {
 		return (
@@ -105,6 +109,7 @@ const Edit = () => {
 			</View>
 
 			<View style={styles.form}>
+				{!editCount && <>
 				<View style={styles.inputGroup}>
 					<Text style={styles.label}>Title</Text>
 					<TextInput
@@ -155,6 +160,47 @@ const Edit = () => {
 				<TouchableOpacity style={styles.deleteBtn} onPress={deleteHabit}>
 					<Text style={styles.deleteBtnText}>Delete Habit</Text>
 				</TouchableOpacity>
+				</>}
+				{editCount && <>
+				<View style={styles.inputGroup}>
+					<Text style={styles.label}>Completion Count</Text>
+					<TextInput
+						style={styles.input}
+						value={completionCount}
+						onChangeText={setCompletionCount}
+						placeholder="Enter completion count"
+						keyboardType="numeric"
+					/>
+				</View>
+				<TouchableOpacity
+					style={styles.updateBtn}
+					onPress={async () => {
+						const newCount = parseInt(completionCount) || 0;
+						try {
+							const response = await fetch(`https://c346-ca2-server.onrender.com/habit/${habit.habit_id}/completions`, {
+								method: 'PUT',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({ new_count: newCount })
+							});
+							if (response.ok) {
+								Alert.alert('Success', 'Completion count updated', [
+									{ text: 'OK', onPress: () => navigation.navigate('Home') }
+								]);
+							} else {
+								const data = await response.json();
+								Alert.alert('Error', data.message || 'Failed to update count');
+							}
+						} catch (error) {
+							Alert.alert('Error', 'Unable to connect to server');
+						}
+					}}
+				>
+					<Text style={styles.updateBtnText}>Save Completion Count</Text>
+				</TouchableOpacity>
+				<TouchableOpacity style={styles.deleteBtn} onPress={() => navigation.goBack()}>
+					<Text style={styles.deleteBtnText}>Cancel</Text>
+				</TouchableOpacity>
+				</>}
 			</View>
 		</ScrollView>
 	);

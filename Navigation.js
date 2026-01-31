@@ -7,6 +7,7 @@ import Add from './Add';
 import CompleteHabitScreen from './CompleteHabitScreen';
 import PointScreen from './PointScreen';
 import Edit from './Edit';
+import EditCompletion from './EditCompletion';
 
 const Stack = createNativeStackNavigator();
 
@@ -43,6 +44,12 @@ const Navigation = () => {
           name="Points"
           component={PointScreen}
           options={{ title: 'Total Points Collected' }}
+        />
+
+        <Stack.Screen
+          name="EditCompletion"
+          component={EditCompletion}
+          options={{ title: 'Edit Completion Count' }}
         />
 
       </Stack.Navigator>
